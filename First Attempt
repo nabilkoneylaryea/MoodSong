@@ -1,0 +1,48 @@
+from googleapiclient.discovery import build
+import json
+import google_auth_oauthlib.flow
+import os
+import googleapiclient.errors
+# GETTING THE SERVICE INFO
+service_name = 'youtube'
+version = 'v3'
+api_key = 'AIzaSyCCh0YpqomB8I7P-AHhxWWwyhy3CXvG7Ks'
+client_secrets_file = "Youtube_Client_Secret.json"
+
+# AUTHENTICATION
+scopes = ["https://www.googleapis.com/auth/youtube"]
+os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+flow = google_auth_oauthlib.flow.InstalledAppFlow.from_client_secrets_file(client_secrets_file, scopes)
+credentials = flow.run_console()
+
+# BUILDING THE SERVICE
+youtube = build(serviceName=service_name,version=version, developerKey=api_key, credentials=credentials)
+
+# GET CHANNEL ID
+channel_search_request = youtube.channels().list(
+    part='contentDetails', #parameters for list method for channel resource can be found in youtube documentation
+    forUsername='nkoney12'
+)
+channel_search_response = channel_search_request.execute()
+channel_items = channel_search_response['items']
+channel_id = channel_items[0]["id"]
+#print(json.dumps(channel_items, sort_keys=True, indent=4))
+# CREATE A PLAYLIST
+create_playlist_request = youtube.playlists().insert(
+    part='id',
+    body={
+        "id":{channel_id},
+        "snippet":{
+            "title": "Python Script Playlist",
+            "tags": [
+              "sample playlist",
+              "API call"
+            ],
+            "defaultLanguage": "en"
+        },
+        "status":{
+            "privacyStatus":"public"
+        }
+    }
+)
+response = create_playlist_request.execute()
